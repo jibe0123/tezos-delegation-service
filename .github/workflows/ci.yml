@@ -1,4 +1,4 @@
-name: Unit-test CI
+name: Unit-test CI - GO
 
 on:
   push:
