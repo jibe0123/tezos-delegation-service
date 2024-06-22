@@ -1,41 +1,63 @@
 package main
 
 import (
-	"github.com/joho/godotenv"
+	"context"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"technical-test/internal/api"
-	"technical-test/internal/repository"
-	"technical-test/internal/service"
-	"technical-test/internal/sync"
-	"technical-test/pkg/tzkt"
+	"technical-test/internal/app"
+	"technical-test/pkg/config"
+	database "technical-test/pkg/sqlite"
+	tezos "technical-test/pkg/tzkt"
+	"time"
 )
 
 func main() {
-	err := godotenv.Load()
+	// Load configuration
+	cfg := config.LoadConfig()
+
+	db, err := database.InitDB(cfg.DatabasePath)
 	if err != nil {
-		log.Fatalf("Error loading .env file")
+		log.Fatal(err)
+	}
+	defer db.Close()
+	log.Println("Database initialized successfully 💾")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	tezosClient := tezos.NewClient(cfg.TezosAPIBaseURL)
+	newApp := app.NewApp(db, tezosClient, ctx)
+	go newApp.StartPolling()
+
+	router := api.NewRouter(newApp)
+
+	// explicit host to avoid warning message
+	server := &http.Server{
+		Addr:    "127.0.0.1:8080",
+		Handler: router,
 	}
 
-	baseURL := os.Getenv("TZKT_API_BASE_URL")
-	if baseURL == "" {
-		log.Fatalf("TZKT_API_BASE_URL environment variable is not set")
+	go func() {
+		log.Println("Server is starting on port 8080 🚀")
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("ListenAndServe(): %s", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+	<-quit
+
+	log.Println("Shutting down server... 👋")
+
+	ctxShutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctxShutdown); err != nil {
+		log.Fatalf("Server Shutdown Failed:%+s", err)
 	}
-
-	repo := repository.NewMemoryRepository()
-	svc := service.NewDelegationService(repo)
-	handler := api.NewHandler(svc)
-
-	client := tzkt.NewClient("https://api.ghostnet.tzkt.io")
-	poller := sync.NewPoller(client, svc)
-
-	go poller.StartPolling()
-
-	http.HandleFunc("/xtz/delegations", handler.GetDelegations)
-
-	log.Println("Starting server on :8080")
-	if err := http.ListenAndServe("localhost:8080", nil); err != nil {
-		log.Fatalf("Could not start server: %v", err)
-	}
+	log.Println("Server exited properly ✅")
 }

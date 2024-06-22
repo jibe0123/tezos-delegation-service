@@ -1,55 +1,25 @@
-# Tezos Delegation Service 🚀
+# 🚀 Tezos Delegation Service
 
-## Description 📋
+This project implements a Golang service that gathers new delegations made on the Tezos protocol and exposes them through a public API.
 
-This service collects new delegations made on the Tezos protocol and exposes them through a public API.
+## ✨ Features
 
-## Requirements 🛠️
+- 📡 Polls new delegations from the Tzkt API endpoint
+- 🗄️ Stores delegation data in a persistent store (SQLite)
+- 🌐 Exposes the collected data through a public API endpoint `/xtz/delegations`
 
-- Go 1.16 or later
-- `godotenv` package
+## 📑 API
 
-## Installation 💻
+### GET /xtz/delegations
 
-1. Clone the repository:
-   ```sh
-   git clone https://github.com/jibe0123/tezos-delegation-service.git
-   cd tezos-delegation-service
-   ```
+- 📂 Retrieves all delegations, optionally filtered by year.
+- 🔍 Query Parameters:
+  - `year` (optional): Filter delegations by year (format: YYYY)
 
-2. Install dependencies:
-   ```sh
-   go mod tidy
-   ```
-
-3. Create a `.env` file at the root of the project with the following content:
-   ```plaintext
-   TZKT_API_BASE_URL=https://api.tzkt.io
-   ```
-
-## Usage 🚀
-
-1. Start the service:
-   ```sh
-   go run cmd/main.go
-   ```
-
-2. The service will start polling the Tezos Tzkt API and storing delegation data in memory.
-
-3. Access the delegations through the public API at `http://localhost:8080/xtz/delegations`.
-
-### Example API Request 🔍
-
-- **Endpoint**: `/xtz/delegations`
-- **Method**: GET
-- **Query Parameters**:
-    - `year` (optional): Filter delegations by the specified year (format: YYYY)
-
-### Example API Response 📄
-
+Example Response:
 ```json
 {
-  "data": [
+  "data": [ 
     {
       "timestamp": "2022-05-05T06:29:14Z",
       "amount": "125896",
@@ -66,24 +36,41 @@ This service collects new delegations made on the Tezos protocol and exposes the
 }
 ```
 
-## Testing 🧪
+## 🛠️ Environment Variables
 
-To run tests:
+- `TZKT_API_BASE_URL`: Base URL for the Tezos API (default: `https://api.tzkt.io/v1/`)
+- `DATABASE_PATH`: Path to the SQLite database file (default: `delegations.db`)
 
+## 🏃‍♂️ Running Locally
+
+1. 📥 Clone the repository:
+    ```sh
+    git clone https://github.com/your_username/tezos-delegation-service.git
+    cd tezos-delegation-service
+    ```
+
+2. 📦 Install dependencies:
+    ```sh
+    go mod tidy
+    ```
+
+3. 🔧 Set up environment variables:
+    - Create a `.env` file in the root directory of your project and add the following lines:
+    ```env
+    TZKT_API_BASE_URL=https://api.tzkt.io/v1/
+    DATABASE_PATH=delegations.db
+    ```
+
+4. 🚀 Run the service:
+    ```sh
+    go run cmd/main.go
+    ```
+
+5. 🌐 The API will be available at `http://localhost:8080`.
+
+## ✅ Running Tests
+
+Run the following command to execute the tests:
 ```sh
 go test ./...
 ```
-
-## Project Structure 🗂️
-
-- `cmd/`: Contains the entry point of the application.
-- `internal/api/`: Contains the HTTP handler.
-- `internal/domain/`: Contains domain models.
-- `internal/repository/`: Contains the repository interface and in-memory implementation.
-- `internal/service/`: Contains the business logic.
-- `internal/sync/`: Contains the polling logic.
-- `pkg/tzkt/`: Contains the client for the Tzkt API.
-
-## Environment Variables 🌍
-
-- `TZKT_API_BASE_URL`: The base URL for the Tzkt API.
