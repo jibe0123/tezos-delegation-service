@@ -1,42 +1,35 @@
-package tzkt
+package tezos
 
 import (
 	"encoding/json"
 	"net/http"
-	"time"
+	"technical-test/internal/delegation/domain"
 )
 
-// Delegation represents a delegation operation from the Tzkt API
-type Delegation struct {
-	Sender struct {
-		Address string `json:"address"`
-	} `json:"sender"`
-	Timestamp time.Time `json:"timestamp"`
-	Amount    int64     `json:"amount"`
-	Level     int64     `json:"level"`
+// Client defines the interface for fetching delegations from the Tezos API.
+type Client interface {
+	GetDelegations() ([]domain.Delegation, error)
 }
 
-// Client provides methods to interact with the Tzkt API
-type Client struct {
+type client struct {
 	baseURL string
 }
 
-// NewClient creates a new Tzkt API client
-func NewClient(baseURL string) *Client {
-	return &Client{baseURL: baseURL}
+// NewClient creates a new Tezos Client instance.
+func NewClient(baseURL string) Client {
+	return &client{baseURL: baseURL}
 }
 
-// GetDelegations fetches delegations from the Tzkt API
-func (c *Client) GetDelegations() ([]Delegation, error) {
-	resp, err := http.Get(c.baseURL + "/v1/operations/delegations")
+// GetDelegations fetches delegations from the Tezos API.
+func (c *client) GetDelegations() ([]domain.Delegation, error) {
+	resp, err := http.Get(c.baseURL + "operations/delegations")
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	var delegations []Delegation
-	err = json.NewDecoder(resp.Body).Decode(&delegations)
-	if err != nil {
+	var delegations []domain.Delegation
+	if err := json.NewDecoder(resp.Body).Decode(&delegations); err != nil {
 		return nil, err
 	}
 
