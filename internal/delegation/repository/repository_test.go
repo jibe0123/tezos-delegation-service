@@ -4,13 +4,13 @@ import (
 	"technical-test/internal/delegation/domain"
 	database "technical-test/pkg/sqlite"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestSaveAndFindAll(t *testing.T) {
 	db, err := database.InitDB(":memory:")
-	assert.NoError(t, err)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 	defer db.Close()
 
 	repo := NewRepository(db)
@@ -27,10 +27,32 @@ func TestSaveAndFindAll(t *testing.T) {
 	}
 
 	err = repo.Save(delegation)
-	assert.NoError(t, err)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 
 	delegations, err := repo.FindAll("")
-	assert.NoError(t, err)
-	assert.Equal(t, 1, len(delegations))
-	assert.Equal(t, delegation, delegations[0])
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if len(delegations) != 1 {
+		t.Fatalf("expected 1 delegation, got %d", len(delegations))
+	}
+
+	if delegations[0].Timestamp != delegation.Timestamp {
+		t.Errorf("expected timestamp %s, got %s", delegation.Timestamp, delegations[0].Timestamp)
+	}
+
+	if delegations[0].Amount != delegation.Amount {
+		t.Errorf("expected amount %d, got %d", delegation.Amount, delegations[0].Amount)
+	}
+
+	if delegations[0].Sender.Address != delegation.Sender.Address {
+		t.Errorf("expected sender address %s, got %s", delegation.Sender.Address, delegations[0].Sender.Address)
+	}
+
+	if delegations[0].Level != delegation.Level {
+		t.Errorf("expected level %d, got %d", delegation.Level, delegations[0].Level)
+	}
 }

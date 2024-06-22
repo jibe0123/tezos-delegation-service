@@ -39,10 +39,12 @@ func (h *Handler) GetDelegations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var response GetDelegationsResponse
+	response := GetDelegationsResponse{
+		Data: []DelegationResponse{}, // Initialize with an empty array
+	}
 	for _, d := range delegations {
 		response.Data = append(response.Data, DelegationResponse{
-			Timestamp: d.Timestamp, // Keep as string
+			Timestamp: d.Timestamp,
 			Amount:    strconv.FormatInt(d.Amount, 10),
 			Delegator: d.Sender.Address,
 			Level:     strconv.FormatInt(d.Level, 10),
