@@ -2,8 +2,7 @@ package database
 
 import (
 	"database/sql"
-	"log"
-
+	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -23,11 +22,14 @@ func InitDB(filepath string) (Database, error) {
 	}
 
 	createTableQuery := `CREATE TABLE IF NOT EXISTS delegations (
-		timestamp TEXT,
+    	id INTEGER PRIMARY KEY AUTOINCREMENT,
+		tx_id integer NOT NULL,
+		timestamp DATETIME NOT NULL,
 		amount TEXT,
 		delegator TEXT,
-		level TEXT,
-		UNIQUE(timestamp, delegator, level)
+		block TEXT,
+		level integer NOT NULL,
+		UNIQUE(tx_id, level, timestamp)
 	);`
 
 	_, err = db.Exec(createTableQuery)
@@ -35,6 +37,6 @@ func InitDB(filepath string) (Database, error) {
 		return nil, err
 	}
 
-	log.Println("Database table created successfully")
+	fmt.Println("Database table created successfully")
 	return db, nil
 }

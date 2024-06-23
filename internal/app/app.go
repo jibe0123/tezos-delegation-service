@@ -16,22 +16,24 @@ import (
 type App struct {
 	Repo repository.Repository
 	svc  services.Service
-	ctx  context.Context
 }
 
 // NewApp creates a new App instance.
-func NewApp(db database.Database, tezosClient tezos.Client, ctx context.Context) *App {
+func NewApp(db database.Database, tezosClient tezos.Client) *App {
 	repo := repository.NewRepository(db)
 	svc := services.NewService(tezosClient, repo)
 	return &App{
 		Repo: repo,
 		svc:  svc,
-		ctx:  ctx,
 	}
 }
 
 // StartPolling starts the polling process for fetching delegations.
-func (a *App) StartPolling() {
+func (a *App) StartPolling(ctx context.Context) {
+	log.Println("Starting to fetch delegations...")
+	a.fetchDelegations()
+
+	// Create a ticker to fetch every hour
 	ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
 
@@ -40,7 +42,7 @@ func (a *App) StartPolling() {
 		case <-ticker.C:
 			log.Println("Starting to fetch delegations...")
 			a.fetchDelegations()
-		case <-a.ctx.Done():
+		case <-ctx.Done():
 			log.Println("Stopping polling due to context cancellation")
 			return
 		}
@@ -56,14 +58,20 @@ func (a *App) fetchDelegations() {
 	}
 
 	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, 2) // Limit the number of concurrent goroutines semaphore pattern
+
 	for _, d := range delegations {
 		wg.Add(1)
+		semaphore <- struct{}{}
+
 		go func(delegation domain.Delegation) {
 			defer wg.Done()
+			defer func() { <-semaphore }()
+
 			if err := a.Repo.Save(delegation); err != nil {
 				log.Println("Error saving delegation:", err)
 			} else {
-				log.Printf("Delegation saved: %+v\n", delegation)
+				log.Printf("Delegation saved: %+v\n", delegation.TxId)
 			}
 		}(d)
 	}

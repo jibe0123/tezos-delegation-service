@@ -19,20 +19,20 @@ This project implements a Golang service that gathers new delegations made on th
 Example Response:
 ```json
 {
-  "data": [ 
-    {
-      "timestamp": "2022-05-05T06:29:14Z",
-      "amount": "125896",
-      "delegator": "tz1a1SAaXRt9yoGMx29rh9FsBF4UzmvojdTL",
-      "level": "2338084"
-    },
-    {
-      "timestamp": "2021-05-07T14:48:07Z",
-      "amount": "9856354",
-      "delegator": "KT1JejNYjmQYh8yw95u5kfQDRuxJcaUPjUnf",
-      "level": "1461334"
-    }
-  ]
+   "data": [
+      {
+         "timestamp": "2022-01-25T19:17:23Z",
+         "amount": "1999950",
+         "delegator": "KT1WAac8RkaVvACASH9hNESp8pziJeg6WhgQ",
+         "level": "102"
+      },
+      {
+         "timestamp": "2022-01-25T19:17:23Z",
+         "amount": "1999950",
+         "delegator": "KT1P5ehtZPTQk6SRFghM8LAnEGCP6R46fCsA",
+         "level": "102"
+      }
+   ]
 }
 ```
 
@@ -45,7 +45,7 @@ Example Response:
 
 1. Clone the repository:
     ```sh
-    git clone https://github.com/your_username/tezos-delegation-service.git
+    git clone https://github.com/jibe0123/tezos-delegation-service.git
     cd tezos-delegation-service
     ```
 
@@ -57,7 +57,7 @@ Example Response:
 3. Set up environment variables:
    - Create a `.env` file in the root directory of your project and add the following lines:
     ```env
-    TZKT_API_BASE_URL=https://api.tzkt.io/v1/
+    TZKT_API_BASE_URL=https://api.ghostnet.tzkt.io/v1/
     DATABASE_PATH=delegations.db
     ```
 

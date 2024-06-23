@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"technical-test/internal/app"
+	"time"
 )
 
 // Handler defines the HTTP handler for the API.
@@ -24,10 +25,10 @@ type GetDelegationsResponse struct {
 
 // DelegationResponse represents the structure of a delegation in the response
 type DelegationResponse struct {
-	Timestamp string `json:"timestamp"`
-	Amount    string `json:"amount"`
-	Delegator string `json:"delegator"`
-	Level     string `json:"level"`
+	Timestamp time.Time `json:"timestamp"`
+	Amount    string    `json:"amount"`
+	Delegator string    `json:"delegator"`
+	Level     string    `json:"level"`
 }
 
 // GetDelegations handles requests to retrieve delegations
@@ -40,14 +41,14 @@ func (h *Handler) GetDelegations(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := GetDelegationsResponse{
-		Data: []DelegationResponse{}, // Initialize with an empty array
+		Data: []DelegationResponse{}, // Init with an empty array
 	}
 	for _, d := range delegations {
 		response.Data = append(response.Data, DelegationResponse{
 			Timestamp: d.Timestamp,
 			Amount:    strconv.FormatInt(d.Amount, 10),
 			Delegator: d.Sender.Address,
-			Level:     strconv.FormatInt(d.Level, 10),
+			Level:     strconv.FormatInt(int64(d.Level), 10),
 		})
 	}
 

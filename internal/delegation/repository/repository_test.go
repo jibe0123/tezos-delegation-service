@@ -4,6 +4,7 @@ import (
 	"technical-test/internal/delegation/domain"
 	database "technical-test/pkg/sqlite"
 	"testing"
+	"time"
 )
 
 func TestSaveAndFindAll(t *testing.T) {
@@ -15,15 +16,17 @@ func TestSaveAndFindAll(t *testing.T) {
 
 	repo := NewRepository(db)
 
+	sender := struct {
+		Address string `json:"address"`
+	}{
+		Address: "tz1a1SAaXRt9yoGMx29rh9FsBF4UzmvojdTL",
+	}
+
 	delegation := domain.Delegation{
-		Timestamp: "2022-05-05T06:29:14Z",
+		Timestamp: time.Date(2022, time.May, 5, 6, 29, 14, 0, time.UTC),
 		Amount:    125896,
-		Sender: struct {
-			Address string `json:"address"`
-		}{
-			Address: "tz1a1SAaXRt9yoGMx29rh9FsBF4UzmvojdTL",
-		},
-		Level: 2338084,
+		Sender:    sender,
+		Level:     2338084,
 	}
 
 	err = repo.Save(delegation)

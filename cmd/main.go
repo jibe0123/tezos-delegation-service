@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -24,14 +25,15 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	log.Println("Database initialized successfully 💾")
+	fmt.Println("Database initialized successfully 💾")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	tezosClient := tezos.NewClient(cfg.TezosAPIBaseURL)
-	newApp := app.NewApp(db, tezosClient, ctx)
-	go newApp.StartPolling()
+	newApp := app.NewApp(db, tezosClient)
+
+	go newApp.StartPolling(ctx)
 
 	router := api.NewRouter(newApp)
 
@@ -42,9 +44,9 @@ func main() {
 	}
 
 	go func() {
-		log.Println("Server is starting on port 8080 🚀")
+		fmt.Println("Server is starting on port 8080 🚀")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("ListenAndServe(): %s", err)
+			log.Fatalf("ListenAndServe(): %v", err)
 		}
 	}()
 
@@ -57,7 +59,7 @@ func main() {
 	ctxShutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctxShutdown); err != nil {
-		log.Fatalf("Server Shutdown Failed:%+s", err)
+		log.Fatalf("Server Shutdown Failed: %v", err)
 	}
 	log.Println("Server exited properly ✅")
 }

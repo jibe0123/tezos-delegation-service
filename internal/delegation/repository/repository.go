@@ -28,13 +28,13 @@ func (r *repository) Save(delegation domain.Delegation) error {
 	}
 	defer tx.Rollback()
 
-	stmt, err := tx.Prepare("INSERT OR IGNORE INTO delegations (timestamp, amount, delegator, level) VALUES (?, ?, ?, ?)")
+	stmt, err := tx.Prepare("INSERT OR IGNORE INTO delegations (tx_id, timestamp, amount, delegator, level, block) VALUES (?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(delegation.Timestamp, delegation.Amount, delegation.Sender.Address, delegation.Level)
+	_, err = stmt.Exec(delegation.TxId, delegation.Timestamp, delegation.Amount, delegation.Sender.Address, delegation.Level, delegation.Block)
 	if err != nil {
 		return err
 	}

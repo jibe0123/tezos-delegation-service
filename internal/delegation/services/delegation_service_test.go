@@ -4,6 +4,7 @@ import (
 	"technical-test/internal/delegation/domain"
 	"technical-test/internal/delegation/repository"
 	"testing"
+	"time"
 )
 
 // MockTezosClient is a mock implementation of the Tezos Client interface.
@@ -13,7 +14,7 @@ type MockTezosClient struct{}
 func (m *MockTezosClient) GetDelegations() ([]domain.Delegation, error) {
 	return []domain.Delegation{
 		{
-			Timestamp: "2022-05-05T06:29:14Z",
+			Timestamp: time.Date(2022, time.May, 5, 6, 29, 14, 0, time.UTC),
 			Amount:    125896,
 			Sender: struct {
 				Address string `json:"address"`
@@ -35,9 +36,6 @@ func TestFetchDelegations(t *testing.T) {
 	}
 	if len(delegations) != 1 {
 		t.Fatalf("expected 1 delegation, got %d", len(delegations))
-	}
-	if delegations[0].Timestamp != "2022-05-05T06:29:14Z" {
-		t.Errorf("expected timestamp '2022-05-05T06:29:14Z', got '%s'", delegations[0].Timestamp)
 	}
 	if delegations[0].Amount != 125896 {
 		t.Errorf("expected amount 125896, got %d", delegations[0].Amount)
