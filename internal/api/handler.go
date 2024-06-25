@@ -1,11 +1,12 @@
 package api
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 	"technical-test/internal/app"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 // Handler represents the HTTP handler for the API.
@@ -34,22 +35,17 @@ type DelegationResponse struct {
 }
 
 // GetDelegations handles requests to retrieve delegations.
-func (h *Handler) GetDelegations(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	yearStr := r.URL.Query().Get("year")
+func (h *Handler) GetDelegations(c *gin.Context) {
+	yearStr := c.Query("year")
 
 	if err := validateYear(yearStr); err != nil {
-		http.Error(w, "Invalid year parameter", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid year parameter"})
 		return
 	}
 
 	delegations, err := h.app.Repo.FindAll(yearStr)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -65,10 +61,7 @@ func (h *Handler) GetDelegations(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-	}
+	c.JSON(http.StatusOK, response)
 }
 
 // validateYear validates the year parameter.

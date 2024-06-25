@@ -1,22 +1,24 @@
 package repository
 
 import (
+	"database/sql"
 	"technical-test/internal/delegation/domain"
-	database "technical-test/pkg/sqlite"
+	"time"
 )
 
 // Repository defines the methods that any data storage provider needs to implement to get and store delegations.
 type Repository interface {
 	Save(delegation domain.Delegation) error
 	FindAll(year string) ([]domain.Delegation, error)
+	GetLastTimestamp() (time.Time, error)
 }
 
 type repository struct {
-	db database.Database
+	db *sql.DB
 }
 
 // NewRepository creates a new Repository instance.
-func NewRepository(db database.Database) Repository {
+func NewRepository(db *sql.DB) Repository {
 	return &repository{db: db}
 }
 
@@ -28,7 +30,7 @@ func (r *repository) Save(delegation domain.Delegation) error {
 	}
 	defer tx.Rollback()
 
-	stmt, err := tx.Prepare("INSERT OR IGNORE INTO delegations (tx_id, timestamp, amount, delegator, level, block) VALUES (?, ?, ?, ?, ?, ?)")
+	stmt, err := tx.Prepare("INSERT INTO delegations (tx_id, timestamp, amount, delegator, level, block) VALUES (?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		return err
 	}
@@ -44,10 +46,10 @@ func (r *repository) Save(delegation domain.Delegation) error {
 
 // FindAll retrieves all delegations from the database, optionally filtering by year.
 func (r *repository) FindAll(year string) ([]domain.Delegation, error) {
-	query := "SELECT timestamp, amount, delegator, level FROM delegations"
+	query := "SELECT timestamp, amount, delegator, level, block FROM delegations"
 	args := []interface{}{}
 	if year != "" {
-		query += " WHERE strftime('%Y', timestamp) = ? ORDER BY timestamp DESC"
+		query += " WHERE YEAR(timestamp) = ? ORDER BY timestamp DESC"
 		args = append(args, year)
 	} else {
 		query += " ORDER BY timestamp DESC"
@@ -62,7 +64,7 @@ func (r *repository) FindAll(year string) ([]domain.Delegation, error) {
 	var delegations []domain.Delegation
 	for rows.Next() {
 		var d domain.Delegation
-		if err := rows.Scan(&d.Timestamp, &d.Amount, &d.Sender.Address, &d.Level); err != nil {
+		if err := rows.Scan(&d.Timestamp, &d.Amount, &d.Sender.Address, &d.Level, &d.Block); err != nil {
 			return nil, err
 		}
 		delegations = append(delegations, d)
@@ -73,4 +75,18 @@ func (r *repository) FindAll(year string) ([]domain.Delegation, error) {
 	}
 
 	return delegations, nil
+}
+
+// GetLastTimestamp retrieves the most recent timestamp from the delegations table.
+func (r *repository) GetLastTimestamp() (time.Time, error) {
+	var lastTimestamp time.Time
+	query := "SELECT MAX(timestamp) FROM delegations"
+	err := r.db.QueryRow(query).Scan(&lastTimestamp)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return time.Time{}, nil // Return zero time if no records found
+		}
+		return time.Time{}, err
+	}
+	return lastTimestamp, nil
 }

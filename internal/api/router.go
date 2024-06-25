@@ -1,14 +1,13 @@
 package api
 
 import (
-	"net/http"
+	"github.com/gin-gonic/gin"
 	"technical-test/internal/app"
 )
 
-// NewRouter creates a new HTTP router.
-func NewRouter(app *app.App) http.Handler {
-	mux := http.NewServeMux()
+func NewRouter(app *app.App) *gin.Engine {
+	router := gin.Default()
 	handler := NewHandler(app)
-	mux.HandleFunc("/xtz/delegations", handler.GetDelegations)
-	return mux
+	router.GET("/xtz/delegations", handler.GetDelegations)
+	return router
 }

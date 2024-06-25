@@ -1,29 +1,28 @@
 package config
 
 import (
-	"log"
 	"os"
-
-	"github.com/joho/godotenv"
 )
 
 // Config holds the configuration values.
 type Config struct {
 	TezosAPIBaseURL string
-	DatabasePath    string
+	DBHost          string
+	DBPort          string
+	DBUser          string
+	DBPassword      string
+	DBName          string
 }
 
 // LoadConfig loads configuration from environment variables.
 func LoadConfig() Config {
-	// Load .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
-
 	config := Config{
 		TezosAPIBaseURL: getEnv("TZKT_API_BASE_URL", "https://api.tzkt.io/v1/"),
-		DatabasePath:    getEnv("DATABASE_PATH", "delegations.db"),
+		DBHost:          getEnv("DB_HOST", "localhost"),
+		DBPort:          getEnv("DB_PORT", "3306"),
+		DBUser:          getEnv("DB_USER", "root"),
+		DBPassword:      getEnv("DB_PASSWORD", "root"),
+		DBName:          getEnv("DB_NAME", "tezos_delegations"),
 	}
 	return config
 }
